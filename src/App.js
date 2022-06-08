@@ -1,21 +1,51 @@
-import React, { useState, useEffect } from "react";
-import CardList from "./components/CardList/CardList";
+import React, { useEffect, useState } from "react";
+import Section from "./components/Section/Section";
+import TaskList from "./components/TaskList/TaskList";
 
 const App = () => {
-  const [products, setProducts] = useState();
+  const [data, setData] = useState();
+  const [error, setError] = useState();
+
+  const getData = async () => {
+    try {
+      const res = await fetch(process.env.REACT_APP_BACKEND_URL);
+      const data = await res.json();
+      if (!data.err) {
+        return setData(data);
+      }
+
+      console.log(data.err);
+      setError(data.err);
+    } catch (err) {
+      return setError(err.message);
+    }
+  };
 
   useEffect(() => {
-    fetch("https://golden-whispering-show.glitch.me/")
-      .then((res) => res.json())
-      .then((data) => setProducts(data));
+    getData();
   }, []);
 
+  const getContent = () => {
+    if (error) {
+      return <div>{error}</div>;
+    }
+
+    if (!data) {
+      return <div>Loading...</div>;
+    }
+
+    if (data.length === 0) {
+      return <div>No Tasks found</div>;
+    }
+
+    return <TaskList tasks={data} />;
+  };
+
   return (
-    <main>
-      <h1>Products</h1>
-      {!products && <div>Loading...</div>}
-      {products && <CardList products={products} />}
-    </main>
+    <Section>
+      <h1>Tasks</h1>
+      {getContent()}
+    </Section>
   );
 };
 
